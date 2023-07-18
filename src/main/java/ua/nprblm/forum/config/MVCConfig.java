@@ -27,5 +27,7 @@ public class MVCConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/fonts/");
 
     }
+
+
 }
 
