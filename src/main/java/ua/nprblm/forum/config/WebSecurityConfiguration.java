@@ -1,7 +1,10 @@
 package ua.nprblm.forum.config;
 
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,29 +13,40 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ua.nprblm.forum.filter.JwtRequestFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@AllArgsConstructor
 public class WebSecurityConfiguration {
 
+
+    private final JwtRequestFilter requestFilter;
     @Bean
-    public PasswordEncoder passwordEncoder()
-    {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception
-    {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/register", "/").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/sign-up", "/auth").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().denyAll()
                 )
-                .sessionManagement(management->management
+                .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(requestFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
 }

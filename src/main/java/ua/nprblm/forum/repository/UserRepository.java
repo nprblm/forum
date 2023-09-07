@@ -6,4 +6,5 @@ import ua.nprblm.forum.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+    User findFirstByEmail(String email);
 }
